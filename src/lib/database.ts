@@ -1,104 +1,17 @@
 
 import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut as firebaseSignOut, 
-  User as FirebaseUser
-} from "firebase/auth";
-import { 
   collection, 
   doc, 
   getDocs, 
   addDoc, 
   updateDoc, 
   deleteDoc, 
-  query, 
-  where, 
   serverTimestamp, 
-  getDoc, 
-  setDoc
+  setDoc 
 } from "firebase/firestore";
-import { auth, db } from "./firebase";
-import { UserProfile } from '@/contexts/AuthContext';
+import { db } from "./firebase";
 
-// Authentication functions
-export async function signIn(email: string, password: string) {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    // Fetch user profile data from Firestore
-    const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
-    const userData = userDoc.data();
-    
-    if (!userData) {
-      return { data: null, error: { message: "User profile not found" } };
-    }
-    
-    return { 
-      data: { 
-        user: {
-          id: userCredential.user.uid,
-          email: userCredential.user.email || '',
-          role: userData.role,
-          name: userData.name,
-          createdAt: userData.createdAt?.toDate().toISOString() || new Date().toISOString(),
-        }
-      }, 
-      error: null 
-    };
-  } catch (error: any) {
-    return { 
-      data: null, 
-      error: { message: error.message || 'Invalid email or password' } 
-    };
-  }
-}
-
-export async function signOut() {
-  try {
-    await firebaseSignOut(auth);
-    return { error: null };
-  } catch (error: any) {
-    return { error: { message: error.message } };
-  }
-}
-
-export async function signUp(email: string, password: string, role: string, name: string) {
-  try {
-    // Create user in Firebase Auth
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    
-    // Store additional user data in Firestore
-    await setDoc(doc(db, "users", user.uid), {
-      email,
-      role,
-      name,
-      createdAt: serverTimestamp()
-    });
-    
-    return { 
-      data: { 
-        auth: { 
-          user: {
-            id: user.uid,
-            email,
-            role,
-            name,
-            createdAt: new Date().toISOString(),
-          }
-        }, 
-        profile: null 
-      }, 
-      error: null 
-    };
-  } catch (error: any) {
-    return { 
-      data: null, 
-      error: { message: error.message } 
-    };
-  }
-}
-
+// User management functions
 export async function getAllUsers() {
   try {
     const usersSnapshot = await getDocs(collection(db, "users"));
@@ -113,6 +26,41 @@ export async function getAllUsers() {
     return { users: usersList, error: null };
   } catch (error: any) {
     return { users: [], error: { message: error.message } };
+  }
+}
+
+export async function signUp(email: string, password: string, role: string, name: string) {
+  try {
+    // Generate a random ID for the user
+    const userId = Math.random().toString(36).substring(2, 15);
+    
+    // Store user data in Firestore
+    await setDoc(doc(db, "users", userId), {
+      email,
+      role,
+      name,
+      createdAt: serverTimestamp()
+    });
+    
+    return { 
+      data: { 
+        auth: { 
+          user: {
+            id: userId,
+            email,
+            role,
+            name,
+            createdAt: new Date().toISOString(),
+          }
+        }
+      }, 
+      error: null 
+    };
+  } catch (error: any) {
+    return { 
+      data: null, 
+      error: { message: error.message } 
+    };
   }
 }
 

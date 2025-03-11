@@ -1,7 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { getAllUsers } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,23 +12,10 @@ export default function UserManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
-  const { isAdmin, isAuthenticated, isLoading: authLoading } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!authLoading && !isAdmin) {
-      toast({
-        title: "Acesso negado",
-        description: "Apenas administradores podem acessar esta página",
-        variant: "destructive",
-      });
-      navigate('/');
-    }
-    
-    if (isAuthenticated && isAdmin) {
-      fetchUsers();
-    }
-  }, [isAuthenticated, isAdmin, authLoading, navigate, toast]);
+    fetchUsers();
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -63,14 +48,6 @@ export default function UserManagementPage() {
     fetchUsers();
     setIsDialogOpen(false);
   };
-
-  if (authLoading) {
-    return <div className="flex items-center justify-center h-full">Carregando...</div>;
-  }
-
-  if (!isAdmin) {
-    return null;
-  }
 
   return (
     <div className="container mx-auto py-6">

@@ -36,7 +36,17 @@ export default function UserManagementPage() {
     try {
       const { users: fetchedUsers, error } = await getAllUsers();
       if (error) throw error;
-      setUsers(fetchedUsers || []);
+      
+      // Ensure the fetched users conform to the UserProfileType
+      const typedUsers: UserProfileType[] = fetchedUsers?.map(user => ({
+        id: user.id,
+        email: user.email,
+        role: user.role as UserProfileType['role'],
+        name: user.name,
+        createdAt: user.createdAt
+      })) || [];
+      
+      setUsers(typedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast({

@@ -1,8 +1,12 @@
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { signIn, signOut } from '@/lib/database';
 
-// Define a simplified user profile type without Supabase dependencies
+// Define a user profile type
 export interface UserProfile {
   id: string;
   email: string;
@@ -22,15 +26,6 @@ interface AuthContextType {
   logout: () => Promise<void>;
 }
 
-// Create a mock admin user for testing
-const mockAdminUser: UserProfile = {
-  id: '1',
-  email: 'admin@teste.com',
-  role: 'admin',
-  name: 'Admin User',
-  createdAt: new Date().toISOString(),
-};
-
 const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
@@ -47,21 +42,63 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Simple login function that sets the mock admin user
+  // Listen for authentication state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setIsLoading(true);
+      
+      if (firebaseUser) {
+        try {
+          // Get additional user data from Firestore
+          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+          const userData = userDoc.data();
+          
+          if (userData) {
+            const userProfile: UserProfile = {
+              id: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              role: userData.role as UserProfile['role'],
+              name: userData.name,
+              createdAt: userData.createdAt?.toDate?.().toISOString() || new Date().toISOString(),
+            };
+            
+            setUser(userProfile);
+            setProfile(userProfile);
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      } else {
+        setUser(null);
+        setProfile(null);
+      }
+      
+      setIsLoading(false);
+    });
+    
+    // Cleanup subscription
+    return () => unsubscribe();
+  }, []);
+
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock authentication - in a real app, you would validate against your database
-      if (email === 'admin@teste.com' && password === 'password') {
-        setUser(mockAdminUser);
-        setProfile(mockAdminUser);
+      const { data, error } = await signIn(email, password);
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      if (data?.user) {
+        setUser(data.user);
+        setProfile(data.user);
         setIsLoading(false);
         return { success: true };
       } else {
-        throw new Error('Email ou senha inválidos');
+        throw new Error('Failed to login');
       }
     } catch (error) {
       setIsLoading(false);
@@ -72,10 +109,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Simple logout function
   const logout = async () => {
-    setUser(null);
-    setProfile(null);
+    try {
+      await signOut();
+      setUser(null);
+      setProfile(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Erro ao sair",
+        description: "Não foi possível realizar o logout",
+        variant: "destructive",
+      });
+    }
   };
 
   const checkIsAdmin = () => {

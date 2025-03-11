@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
+import { PatientDetailsModal } from "./PatientDetailsModal";
 
 const statusColors = {
   'waiting': 'bg-hospital-warning text-black',
@@ -29,52 +31,67 @@ interface PatientCardProps {
 export function PatientCard({ patient, actionText, onAction }: PatientCardProps) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const age = patient.birthDate ? 
     Math.floor((new Date().getTime() - new Date(patient.birthDate).getTime()) / 31557600000) : 
     'N/A';
 
   return (
-    <Card className="w-full shadow-sm hover:shadow transition-shadow duration-200 flex flex-col h-auto">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
-        <CardTitle className="text-sm font-medium truncate max-w-[65%]">
-          {patient.name}
-        </CardTitle>
-        <Badge className={`${statusColors[patient.status]} text-xs px-2 py-0.5`}>
-          {statusLabels[patient.status]}
-        </Badge>
-      </CardHeader>
-      <CardContent className="p-2">
-        <div className="grid grid-cols-2 gap-1 text-xs">
-          <div>
-            <p className="text-muted-foreground text-xxs">CPF:</p>
-            <p className="truncate">{patient.cpf}</p>
+    <>
+      <Card 
+        className="w-full shadow-sm hover:shadow transition-shadow duration-200 flex flex-col h-auto cursor-pointer"
+        onClick={() => setIsModalOpen(true)}
+      >
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
+          <CardTitle className="text-sm font-medium truncate max-w-[65%]">
+            {patient.name}
+          </CardTitle>
+          <Badge className={`${statusColors[patient.status]} text-xs px-2 py-0.5`}>
+            {statusLabels[patient.status]}
+          </Badge>
+        </CardHeader>
+        <CardContent className="p-2">
+          <div className="grid grid-cols-2 gap-1 text-xs">
+            <div>
+              <p className="text-muted-foreground text-xxs">CPF:</p>
+              <p className="truncate">{patient.cpf}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xxs">Idade:</p>
+              <p>{age} anos</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xxs">Contato:</p>
+              <p className="truncate">{patient.phone}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xxs">Plano:</p>
+              <p className="truncate">{patient.healthInsurance || "Não possui"}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-muted-foreground text-xxs">Idade:</p>
-            <p>{age} anos</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground text-xxs">Contato:</p>
-            <p className="truncate">{patient.phone}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground text-xxs">Plano:</p>
-            <p className="truncate">{patient.healthInsurance || "Não possui"}</p>
-          </div>
-        </div>
-        
-        {actionText && onAction && (
-          <div className="mt-2">
-            <Button 
-              className="w-full bg-hospital-primary hover:bg-hospital-primary/90 text-xs py-0.5 h-7"
-              onClick={() => onAction(patient)}
-            >
-              {actionText}
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          
+          {actionText && onAction && (
+            <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+              <Button 
+                className="w-full bg-hospital-primary hover:bg-hospital-primary/90 text-xs py-0.5 h-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAction(patient);
+                }}
+              >
+                {actionText}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <PatientDetailsModal 
+        patient={patient}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </>
   );
 }

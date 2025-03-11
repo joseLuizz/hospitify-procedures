@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { usePatients } from "@/contexts/PatientContext";
 import { PatientList } from "@/components/PatientList";
 import { UserPlus } from "lucide-react";
+import { Patient } from "@/types/patient";
 
 const patientSchema = z.object({
   name: z.string().min(3, { message: "Nome deve ter no mínimo 3 caracteres" }),
@@ -46,7 +47,19 @@ const PatientRegistration = () => {
   });
 
   const onSubmit = (data: PatientFormValues) => {
-    addPatient(data);
+    // Ensure all required fields are present
+    const patientData: Omit<Patient, 'id' | 'registrationDate' | 'status'> = {
+      name: data.name,
+      birthDate: data.birthDate,
+      gender: data.gender,
+      cpf: data.cpf,
+      phone: data.phone,
+      address: data.address,
+      healthInsurance: data.healthInsurance,
+      emergencyContact: data.emergencyContact,
+    };
+    
+    addPatient(patientData);
     form.reset();
   };
 

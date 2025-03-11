@@ -104,10 +104,87 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addConsultationData = (data: Omit<ConsultationData, 'consultationDate'>) => {
+  const addConsultationData = (data: Partial<Omit<ConsultationData, 'consultationDate'>> & { patientId: string }) => {
+    // Provide default values for all required fields
     const newConsultationData: ConsultationData = {
-      ...data,
+      patientId: data.patientId,
+      allergies: data.allergies || '',
+      hasAllergies: data.hasAllergies || false,
+      mainComplaint: data.mainComplaint || data.symptoms || '',
+      currentDiseaseHistory: data.currentDiseaseHistory || '',
+      hasHypertension: data.hasHypertension || false,
+      hasDiabetes: data.hasDiabetes || false,
+      hasDyslipidemia: data.hasDyslipidemia || false,
+      hasSmoking: data.hasSmoking || false,
+      hasPregnancy: data.hasPregnancy || false,
+      otherComorbidities: data.otherComorbidities || '',
+      continuousMedication: data.continuousMedication || '',
+      generalState: data.generalState || 'BEG',
+      skin: data.skin || {
+        normal: true,
+        pallor: false,
+        jaundice: false,
+        cyanosis: false,
+        noChanges: false,
+      },
+      oropharynx: data.oropharynx || {
+        normal: true,
+        altered: false,
+      },
+      cardiovascular: data.cardiovascular || {
+        normalRhythm: true,
+        altered: false,
+      },
+      respiratory: data.respiratory || {
+        normal: true,
+        altered: false,
+      },
+      abdomen: data.abdomen || {
+        flat: true,
+        globose: false,
+        excavated: false,
+        flaccid: false,
+        tense: false,
+        painful: false,
+      },
+      upperLimbs: data.upperLimbs || {
+        normal: true,
+        altered: false,
+      },
+      lowerLimbs: data.lowerLimbs || {
+        normal: true,
+        altered: false,
+      },
+      neurologicalState: data.neurologicalState || {
+        lucid: true,
+        oriented: true,
+        disoriented: false,
+        drowsy: false,
+        comatose: false,
+      },
+      activeBleedingVisible: data.activeBleedingVisible || false,
+      glasgowScore: data.glasgowScore || 15,
+      bloodPressure: data.bloodPressure || '',
+      heartRate: data.heartRate || '',
+      respiratoryRate: data.respiratoryRate || '',
+      cid: data.cid || '',
+      conduct: data.conduct || {
+        discharge: true,
+        observation: false,
+        hospitalization: false,
+        medicaleave: false,
+      },
+      prescription: data.prescription || '',
+      medicalTime: data.medicalTime || new Date().toLocaleTimeString(),
+      doctorName: data.doctorName || '',
+      nursingTechnician: data.nursingTechnician || '',
       consultationDate: new Date().toISOString(),
+      symptoms: data.symptoms || '',
+      diagnosis: data.diagnosis || '',
+      treatment: data.treatment || '',
+      exams: data.exams || '',
+      notes: data.notes || '',
+      followUp: data.followUp || '',
     };
     
     setConsultationData([...consultationData, newConsultationData]);

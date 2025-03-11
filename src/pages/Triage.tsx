@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { z } from "zod";
@@ -13,13 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { usePatients } from "@/contexts/PatientContext";
 import { PatientList } from "@/components/PatientList";
-import { Stethoscope, AlertCircle, Clock } from "lucide-react";
+import { Stethoscope, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { TriageData } from "@/types/patient";
 
 const triageSchema = z.object({
   date: z.string(),
@@ -123,11 +121,33 @@ const Triage = () => {
 
   const onSubmit = (data: TriageFormValues) => {
     if (selectedPatient) {
-      addTriageData({
+      // Ensure all required fields are included
+      const triageFormData: Omit<TriageData, 'triageDate'> = {
         patientId: selectedPatient.id,
-        ...data,
-        glasgowTotal,
-      });
+        date: data.date,
+        time: data.time,
+        reclassified: data.reclassified,
+        mainComplaints: data.mainComplaints,
+        allergies: data.allergies,
+        regularMedication: data.regularMedication,
+        bloodPressure: data.bloodPressure,
+        heartRate: data.heartRate,
+        respiratoryRate: data.respiratoryRate,
+        oxygenSaturation: data.oxygenSaturation,
+        temperature: data.temperature,
+        glucose: data.glucose,
+        ocularOpening: data.ocularOpening,
+        verbalResponse: data.verbalResponse,
+        motorResponse: data.motorResponse,
+        glasgowTotal: glasgowTotal,
+        pupilReactivity: data.pupilReactivity,
+        painLevel: data.painLevel,
+        priorityLevel: data.priorityLevel,
+        notes: data.notes || "",
+        triageBy: data.triageBy,
+      };
+      
+      addTriageData(triageFormData);
       navigate(`/consulta?id=${selectedPatient.id}`);
     }
   };

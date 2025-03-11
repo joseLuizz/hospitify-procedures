@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { z } from "zod";
@@ -75,7 +74,14 @@ const Consultation = () => {
     if (selectedPatient) {
       addConsultationData({
         patientId: selectedPatient.id,
-        ...data,
+        symptoms: data.symptoms,
+        diagnosis: data.diagnosis,
+        treatment: data.treatment,
+        prescription: data.prescription,
+        exams: data.exams,
+        notes: data.notes,
+        followUp: data.followUp,
+        doctorName: data.doctorName,
       });
       navigate("/");
     }

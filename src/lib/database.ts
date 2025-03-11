@@ -46,8 +46,13 @@ export async function getAllUsers() {
 
 export async function signUp(email: string, password: string, role: string, name: string) {
   try {
-    // Create user in Firebase Authentication
+    // Create user in Firebase Authentication without automatically signing in
     const auth = getAuth();
+    
+    // Get the current user before creating the new one
+    const currentUser = auth.currentUser;
+    
+    // Create the new user
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const userId = userCredential.user.uid;
     
@@ -58,6 +63,12 @@ export async function signUp(email: string, password: string, role: string, name
       name,
       createdAt: serverTimestamp()
     });
+    
+    // If there was a logged in user before, sign back in with that user
+    if (currentUser) {
+      // Force the auth state to refresh without requiring the user to sign in again
+      await auth.updateCurrentUser(currentUser);
+    }
     
     return { 
       data: { 

@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { signIn } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -31,7 +30,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, login } = useAuth();
 
   // If already authenticated, redirect to dashboard
   if (isAuthenticated) {
@@ -50,10 +49,10 @@ export default function Login() {
   const onSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
     try {
-      const { data, error } = await signIn(values.email, values.password);
+      const { success, error } = await login(values.email, values.password);
       
-      if (error) {
-        throw error;
+      if (!success) {
+        throw new Error(error);
       }
       
       toast({

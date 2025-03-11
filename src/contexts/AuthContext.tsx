@@ -1,91 +1,82 @@
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase, UserProfile, getCurrentUser, getUserProfile } from '@/lib/supabase';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
+// Define a simplified user profile type without Supabase dependencies
+export interface UserProfile {
+  id: string;
+  email: string;
+  role: 'tec enfermagem' | 'enfermeiro' | 'medico' | 'admin';
+  name: string;
+  createdAt: string;
+}
+
 interface AuthContextType {
-  session: Session | null;
-  user: User | null;
+  user: UserProfile | null;
   profile: UserProfile | null;
   isLoading: boolean;
   isAdmin: boolean;
   isAuthenticated: boolean;
   checkIsAdmin: () => boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
 }
 
+// Create a mock admin user for testing
+const mockAdminUser: UserProfile = {
+  id: '1',
+  email: 'admin@teste.com',
+  role: 'admin',
+  name: 'Admin User',
+  createdAt: new Date().toISOString(),
+};
+
 const AuthContext = createContext<AuthContextType>({
-  session: null,
   user: null,
   profile: null,
   isLoading: true,
   isAdmin: false,
   isAuthenticated: false,
   checkIsAdmin: () => false,
+  login: async () => ({ success: false }),
+  logout: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    async function loadUserData() {
-      try {
-        // Get session
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        
-        if (session?.user) {
-          setUser(session.user);
-          
-          // Get user profile
-          const { profile, error } = await getUserProfile(session.user.id);
-          if (error) {
-            throw error;
-          }
-          
-          setProfile(profile);
-          setIsAdmin(profile.role === 'admin');
-        }
-      } catch (error) {
-        console.error('Error loading user data:', error);
-        toast({
-          title: "Erro ao carregar dados do usuário",
-          description: "Por favor, tente novamente mais tarde",
-          variant: "destructive",
-        });
-      } finally {
+  // Simple login function that sets the mock admin user
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      // Mock authentication - in a real app, you would validate against your database
+      if (email === 'admin@teste.com' && password === 'password') {
+        setUser(mockAdminUser);
+        setProfile(mockAdminUser);
         setIsLoading(false);
-      }
-    }
-    
-    loadUserData();
-
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      setSession(newSession);
-      setUser(newSession?.user || null);
-      
-      if (newSession?.user) {
-        const { profile } = await getUserProfile(newSession.user.id);
-        setProfile(profile);
-        setIsAdmin(profile?.role === 'admin');
+        return { success: true };
       } else {
-        setProfile(null);
-        setIsAdmin(false);
+        throw new Error('Email ou senha inválidos');
       }
-    });
+    } catch (error) {
+      setIsLoading(false);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro de autenticação' 
+      };
+    }
+  };
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [toast]);
+  // Simple logout function
+  const logout = async () => {
+    setUser(null);
+    setProfile(null);
+  };
 
   const checkIsAdmin = () => {
     return profile?.role === 'admin';
@@ -94,13 +85,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider 
       value={{ 
-        session, 
         user, 
         profile,
         isLoading,
-        isAdmin,
+        isAdmin: profile?.role === 'admin' || false,
         isAuthenticated: !!user,
-        checkIsAdmin
+        checkIsAdmin,
+        login,
+        logout
       }}
     >
       {children}

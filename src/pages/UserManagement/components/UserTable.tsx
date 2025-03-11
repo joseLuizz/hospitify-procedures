@@ -1,7 +1,6 @@
 
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { deleteUser, updateUserRole } from "@/lib/supabase";
+import { deleteUser, updateUserRole } from "@/lib/database";
 import { UserProfileType } from "../types";
 import {
   Table,

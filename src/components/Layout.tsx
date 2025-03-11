@@ -5,7 +5,6 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { HospitalSidebar } from "./HospitalSidebar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { signOut } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { LogOut, User } from "lucide-react";
 
@@ -15,12 +14,12 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
   const { toast } = useToast();
-  const { user, profile, isAuthenticated } = useAuth();
+  const { user, profile, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      await signOut();
+      await logout();
       toast({
         title: "Logout realizado com sucesso",
         description: "Você foi desconectado do sistema",
@@ -67,4 +66,4 @@ export const Layout = ({ children }: LayoutProps) => {
       </div>
     </SidebarProvider>
   );
-};
+}

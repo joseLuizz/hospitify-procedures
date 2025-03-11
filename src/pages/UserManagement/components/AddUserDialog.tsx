@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { signUp } from "@/lib/supabase";
+import { signUp } from "@/lib/database";
 import { UserFormValues } from "../types";
 import {
   Dialog,

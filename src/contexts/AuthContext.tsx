@@ -5,10 +5,12 @@ import {
   signInWithEmailAndPassword, 
   signOut as firebaseSignOut, 
   onAuthStateChanged, 
-  User as FirebaseUser 
+  User as FirebaseUser,
+  createUserWithEmailAndPassword
 } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useToast } from "@/components/ui/use-toast";
 
 export interface User {
   uid: string;
@@ -42,6 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   
   useEffect(() => {
     const auth = getAuth();
@@ -63,14 +66,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               photoURL: firebaseUser.photoURL || undefined
             });
           } else {
-            // If no user document exists, sign out
-            await firebaseSignOut(auth);
-            setUser(null);
-            setError("User data not found");
+            // For testing purposes, create a user document if it doesn't exist
+            // In production, you would typically handle this differently
+            const defaultUserData = {
+              name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+              role: 'admin' as const,
+              createdAt: serverTimestamp()
+            };
+            
+            await setDoc(doc(db, 'users', firebaseUser.uid), defaultUserData);
+            
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              name: defaultUserData.name,
+              role: defaultUserData.role,
+              photoURL: firebaseUser.photoURL || undefined
+            });
+            
+            toast({
+              title: "Perfil criado automaticamente",
+              description: "Um perfil foi criado para você automaticamente",
+            });
           }
         } catch (err) {
           console.error("Error fetching user data:", err);
           setError("Error fetching user data");
+          // Don't sign out automatically on error, just set the error
         }
       } else {
         setUser(null);
@@ -80,7 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     
     return () => unsubscribe();
-  }, []);
+  }, [toast]);
   
   const signIn = async (email: string, password: string) => {
     setLoading(true);

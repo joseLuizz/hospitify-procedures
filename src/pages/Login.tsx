@@ -97,17 +97,16 @@ export default function Login() {
                 <p className="text-sm text-destructive">{errors.password.message}</p>
               )}
             </div>
+            
+            <Button 
+              className="w-full bg-hospital-primary"
+              type="submit"
+              disabled={loading || isSubmitting}
+            >
+              {isSubmitting ? "Entrando..." : "Entrar"}
+            </Button>
           </form>
         </CardContent>
-        <CardFooter>
-          <Button 
-            className="w-full bg-hospital-primary" 
-            onClick={handleSubmit(onSubmit)}
-            disabled={loading || isSubmitting}
-          >
-            {isSubmitting ? "Entrando..." : "Entrar"}
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );

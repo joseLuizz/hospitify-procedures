@@ -11,8 +11,10 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
+  SidebarMenuButton,
   SidebarTrigger,
-  SidebarRail
+  SidebarRail,
+  useSidebar
 } from "@/components/ui/sidebar";
 import { 
   ClipboardList, 
@@ -22,18 +24,18 @@ import {
   Home,
   BarChart3,
   Users,
-  PanelLeft,
+  LogOut,
   Menu
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function HospitalSidebar() {
   const location = useLocation();
   const { state } = useSidebar();
-  // Remove isAdmin dependency and set to true for now since we're not using authentication
-  const isAdmin = true;
+  const { user, isAdmin, signOut } = useAuth();
 
   const menuItems = [
     {
@@ -83,6 +85,26 @@ export function HospitalSidebar() {
           <SidebarTrigger />
         </SidebarHeader>
         <SidebarContent>
+          {user && (
+            <SidebarGroup>
+              <div className="flex items-center gap-3 p-4 border-b border-slate-200">
+                <Avatar>
+                  {user.photoURL ? (
+                    <AvatarImage src={user.photoURL} alt={user.name} />
+                  ) : (
+                    <AvatarFallback className="bg-hospital-primary text-white">
+                      {user.name.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
+                  <p className="font-medium truncate">{user.name}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+                </div>
+              </div>
+            </SidebarGroup>
+          )}
+          
           <SidebarGroup>
             <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -105,6 +127,19 @@ export function HospitalSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
+        
+        {user && (
+          <SidebarFooter className="border-t border-slate-200 p-4">
+            <SidebarMenuButton 
+              onClick={signOut}
+              className="w-full flex items-center justify-center gap-2 text-red-500 hover:bg-red-50"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="group-data-[collapsible=icon]:hidden">Sair</span>
+            </SidebarMenuButton>
+          </SidebarFooter>
+        )}
+        
         <SidebarRail />
       </Sidebar>
       
@@ -114,7 +149,10 @@ export function HospitalSidebar() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => document.querySelector('[data-sidebar="trigger"]')?.click()}
+            onClick={() => {
+              const trigger = document.querySelector('[data-sidebar="trigger"]') as HTMLButtonElement;
+              if (trigger) trigger.click();
+            }}
             className="h-8 w-8 rounded-full bg-white shadow-md border border-slate-200"
           >
             <Menu className="h-4 w-4" />

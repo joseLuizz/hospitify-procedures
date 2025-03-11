@@ -4,58 +4,69 @@ import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import { signIn } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { InitializeDbButton } from "@/components/InitializeDbButton";
 
-const formSchema = z.object({
-  email: z.string().email("E-mail inválido"),
-  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+
+const loginSchema = z.object({
+  email: z.string().email("E-mail inválido").min(1, "E-mail é obrigatório"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
 });
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
-  const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
-  // If user is already authenticated, redirect to dashboard
+  // If already authenticated, redirect to dashboard
   if (isAuthenticated) {
     navigate('/');
     return null;
   }
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
     try {
       const { data, error } = await signIn(values.email, values.password);
       
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       
       toast({
-        title: "Login bem-sucedido",
-        description: "Você foi autenticado com sucesso",
+        title: "Login realizado com sucesso",
+        description: "Bem-vindo de volta!",
       });
       
       navigate('/');
     } catch (error: any) {
       console.error("Login error:", error);
       toast({
-        title: "Erro de autenticação",
-        description: error.message || "Não foi possível autenticar. Verifique suas credenciais.",
+        title: "Erro ao fazer login",
+        description: error.message || "Verifique suas credenciais e tente novamente",
         variant: "destructive",
       });
     } finally {
@@ -64,12 +75,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-hospital-light p-4">
+    <div className="flex items-center justify-center min-h-screen bg-hospital-light">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">HospitalSys</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center text-hospital-primary">
+            Hospital System
+          </CardTitle>
           <CardDescription className="text-center">
-            Entre com sua conta para acessar o sistema
+            Entre com seu e-mail e senha para acessar o sistema
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -82,7 +95,7 @@ export default function Login() {
                   <FormItem>
                     <FormLabel>E-mail</FormLabel>
                     <FormControl>
-                      <Input placeholder="seuemail@exemplo.com" {...field} />
+                      <Input placeholder="seu@email.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -102,18 +115,15 @@ export default function Login() {
                 )}
               />
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Autenticando..." : "Entrar"}
+                {isLoading ? "Entrando..." : "Entrar"}
               </Button>
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex-col gap-4">
-          <div className="text-sm text-muted-foreground text-center">
-            Não tem uma conta? Entre em contato com o administrador.
-          </div>
-          <div className="w-full flex justify-center">
-            <InitializeDbButton />
-          </div>
+        <CardFooter className="flex justify-center">
+          <p className="text-sm text-muted-foreground">
+            Se você não tem uma conta, entre em contato com o administrador do sistema.
+          </p>
         </CardFooter>
       </Card>
     </div>

@@ -33,40 +33,42 @@ export function PatientCard({ patient, actionText, onAction }: PatientCardProps)
     'N/A';
 
   return (
-    <Card className="w-full shadow-sm hover:shadow transition-shadow duration-200">
+    <Card className="w-full h-full shadow-sm hover:shadow transition-shadow duration-200 flex flex-col">
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-        <CardTitle className="text-xl font-medium">{patient.name}</CardTitle>
-        <Badge className={statusColors[patient.status]}>
+        <CardTitle className="text-lg font-medium truncate">{patient.name}</CardTitle>
+        <Badge className={`${statusColors[patient.status]} whitespace-nowrap`}>
           {statusLabels[patient.status]}
         </Badge>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col">
         <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-          <div>
-            <p className="text-muted-foreground">CPF:</p>
-            <p>{patient.cpf}</p>
+          <div className="overflow-hidden">
+            <p className="text-muted-foreground text-xs">CPF:</p>
+            <p className="truncate">{patient.cpf}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Idade:</p>
+            <p className="text-muted-foreground text-xs">Idade:</p>
             <p>{age} anos</p>
           </div>
-          <div>
-            <p className="text-muted-foreground">Contato:</p>
-            <p>{patient.phone}</p>
+          <div className="overflow-hidden">
+            <p className="text-muted-foreground text-xs">Contato:</p>
+            <p className="truncate">{patient.phone}</p>
           </div>
-          <div>
-            <p className="text-muted-foreground">Plano:</p>
-            <p>{patient.healthInsurance || "Não possui"}</p>
+          <div className="overflow-hidden">
+            <p className="text-muted-foreground text-xs">Plano:</p>
+            <p className="truncate">{patient.healthInsurance || "Não possui"}</p>
           </div>
         </div>
         
         {actionText && onAction && (
-          <Button 
-            className="w-full bg-hospital-primary hover:bg-hospital-primary/90"
-            onClick={() => onAction(patient)}
-          >
-            {actionText}
-          </Button>
+          <div className="mt-auto">
+            <Button 
+              className="w-full bg-hospital-primary hover:bg-hospital-primary/90"
+              onClick={() => onAction(patient)}
+            >
+              {actionText}
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>

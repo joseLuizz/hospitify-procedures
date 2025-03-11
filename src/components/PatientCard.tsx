@@ -36,30 +36,30 @@ export function PatientCard({ patient, actionText, onAction }: PatientCardProps)
 
   return (
     <Card className="w-full h-full shadow-sm hover:shadow transition-shadow duration-200 flex flex-col">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm sm:text-base md:text-lg font-medium truncate max-w-[70%]">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 p-3 pb-2">
+        <CardTitle className="text-sm font-medium truncate max-w-[65%]">
           {patient.name}
         </CardTitle>
-        <Badge className={`${statusColors[patient.status]} whitespace-nowrap text-xs`}>
+        <Badge className={`${statusColors[patient.status]} text-xs px-2 py-1`}>
           {statusLabels[patient.status]}
         </Badge>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col p-3 sm:p-4 md:p-6">
-        <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm mb-4">
+      <CardContent className="flex-1 flex flex-col p-3 pt-1">
+        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
           <div>
-            <p className="text-muted-foreground text-xs">CPF:</p>
+            <p className="text-muted-foreground text-xxs">CPF:</p>
             <p className="truncate">{patient.cpf}</p>
           </div>
           <div>
-            <p className="text-muted-foreground text-xs">Idade:</p>
+            <p className="text-muted-foreground text-xxs">Idade:</p>
             <p>{age} anos</p>
           </div>
           <div>
-            <p className="text-muted-foreground text-xs">Contato:</p>
+            <p className="text-muted-foreground text-xxs">Contato:</p>
             <p className="truncate">{patient.phone}</p>
           </div>
           <div>
-            <p className="text-muted-foreground text-xs">Plano:</p>
+            <p className="text-muted-foreground text-xxs">Plano:</p>
             <p className="truncate">{patient.healthInsurance || "Não possui"}</p>
           </div>
         </div>
@@ -67,7 +67,7 @@ export function PatientCard({ patient, actionText, onAction }: PatientCardProps)
         {actionText && onAction && (
           <div className="mt-auto">
             <Button 
-              className="w-full bg-hospital-primary hover:bg-hospital-primary/90 text-xs sm:text-sm py-1 px-2 h-auto sm:h-10"
+              className="w-full bg-hospital-primary hover:bg-hospital-primary/90 text-xs py-1 h-8"
               onClick={() => onAction(patient)}
             >
               {actionText}

@@ -28,6 +28,9 @@ export default {
 			'2xl': '1536px',
 		},
 		extend: {
+			fontSize: {
+				'xxs': '0.65rem',
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

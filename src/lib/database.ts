@@ -13,6 +13,7 @@ import {
   orderBy,
   getDoc
 } from "firebase/firestore";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { db } from "./firebase";
 import { Patient, TriageData, ConsultationData } from "@/types/patient";
 
@@ -45,10 +46,12 @@ export async function getAllUsers() {
 
 export async function signUp(email: string, password: string, role: string, name: string) {
   try {
-    // Generate a random ID for the user
-    const userId = Math.random().toString(36).substring(2, 15);
+    // Create user in Firebase Authentication
+    const auth = getAuth();
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userId = userCredential.user.uid;
     
-    // Store user data in Firestore
+    // Store user data in Firestore with the UID from Firebase Auth
     await setDoc(doc(db, COLLECTIONS.USERS, userId), {
       email,
       role,

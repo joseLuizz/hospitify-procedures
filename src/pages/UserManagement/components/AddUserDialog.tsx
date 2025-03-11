@@ -2,6 +2,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { signUp } from "@/lib/database";
 import { UserFormValues } from "../types";
@@ -31,6 +32,8 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const userFormSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -49,6 +52,8 @@ interface AddUserDialogProps {
 
 export function AddUserDialog({ isOpen, onOpenChange, onUserAdded }: AddUserDialogProps) {
   const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
@@ -61,6 +66,9 @@ export function AddUserDialog({ isOpen, onOpenChange, onUserAdded }: AddUserDial
   });
 
   const onSubmit = async (values: UserFormValues) => {
+    setIsSubmitting(true);
+    setError(null);
+    
     try {
       const { data, error } = await signUp(
         values.email,
@@ -69,7 +77,7 @@ export function AddUserDialog({ isOpen, onOpenChange, onUserAdded }: AddUserDial
         values.name
       );
       
-      if (error) throw error;
+      if (error) throw new Error(error.message);
       
       toast({
         title: "Usuário criado",
@@ -78,13 +86,17 @@ export function AddUserDialog({ isOpen, onOpenChange, onUserAdded }: AddUserDial
       
       form.reset();
       onUserAdded();
+      onOpenChange(false);
     } catch (error: any) {
       console.error("Error creating user:", error);
+      setError(error.message || "Não foi possível criar o usuário");
       toast({
         title: "Erro ao criar usuário",
         description: error.message || "Não foi possível criar o usuário",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -102,6 +114,13 @@ export function AddUserDialog({ isOpen, onOpenChange, onUserAdded }: AddUserDial
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
             <FormField
               control={form.control}
               name="name"
@@ -168,7 +187,9 @@ export function AddUserDialog({ isOpen, onOpenChange, onUserAdded }: AddUserDial
               )}
             />
             <DialogFooter>
-              <Button type="submit">Salvar</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Salvando..." : "Salvar"}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

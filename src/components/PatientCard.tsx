@@ -35,17 +35,17 @@ export function PatientCard({ patient, actionText, onAction }: PatientCardProps)
     'N/A';
 
   return (
-    <Card className="w-full h-full shadow-sm hover:shadow transition-shadow duration-200 flex flex-col">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 p-3 pb-2">
+    <Card className="w-full shadow-sm hover:shadow transition-shadow duration-200 flex flex-col h-auto">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
         <CardTitle className="text-sm font-medium truncate max-w-[65%]">
           {patient.name}
         </CardTitle>
-        <Badge className={`${statusColors[patient.status]} text-xs px-2 py-1`}>
+        <Badge className={`${statusColors[patient.status]} text-xs px-2 py-0.5`}>
           {statusLabels[patient.status]}
         </Badge>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col p-3 pt-1">
-        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+      <CardContent className="p-2">
+        <div className="grid grid-cols-2 gap-1 text-xs">
           <div>
             <p className="text-muted-foreground text-xxs">CPF:</p>
             <p className="truncate">{patient.cpf}</p>
@@ -65,9 +65,9 @@ export function PatientCard({ patient, actionText, onAction }: PatientCardProps)
         </div>
         
         {actionText && onAction && (
-          <div className="mt-auto">
+          <div className="mt-2">
             <Button 
-              className="w-full bg-hospital-primary hover:bg-hospital-primary/90 text-xs py-1 h-8"
+              className="w-full bg-hospital-primary hover:bg-hospital-primary/90 text-xs py-0.5 h-7"
               onClick={() => onAction(patient)}
             >
               {actionText}

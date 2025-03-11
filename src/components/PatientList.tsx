@@ -22,9 +22,9 @@ export function PatientList({ patients, actionText, onAction, emptyMessage = "NÃ
   }
 
   return (
-    <div className="grid grid-cols-1 xxs:grid-cols-1 xs:grid-cols-2 gap-2">
+    <div className="flex flex-col space-y-2">
       {patients.map((patient) => (
-        <div key={patient.id} className="h-full w-full">
+        <div key={patient.id}>
           <PatientCard 
             patient={patient} 
             actionText={actionText}

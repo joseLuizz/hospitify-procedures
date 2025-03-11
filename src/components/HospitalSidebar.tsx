@@ -5,12 +5,12 @@ import {
   Sidebar, 
   SidebarContent, 
   SidebarHeader, 
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
   SidebarTrigger
 } from "@/components/ui/sidebar";
 import { 
@@ -19,12 +19,15 @@ import {
   Stethoscope, 
   FileText, 
   Home,
-  BarChart3
+  BarChart3,
+  Users
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
 
 export function HospitalSidebar() {
   const location = useLocation();
-  const [open, setOpen] = useState(true);
+  const { isAdmin } = useAuth();
 
   const menuItems = [
     {
@@ -54,8 +57,17 @@ export function HospitalSidebar() {
     }
   ];
 
+  // Add user management link for admin users
+  if (isAdmin) {
+    menuItems.push({
+      title: "Gerenciar Usuários",
+      path: "/usuarios",
+      icon: Users,
+    });
+  }
+
   return (
-    <Sidebar defaultCollapsed={false}>
+    <Sidebar>
       <SidebarHeader className="border-b border-slate-200 p-4">
         <div className="flex items-center gap-2">
           <ClipboardList className="h-6 w-6 text-hospital-primary" />
@@ -70,19 +82,16 @@ export function HospitalSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild 
-                    active={location.pathname === item.path}
-                    className={
-                      location.pathname === item.path 
-                      ? "bg-hospital-primary bg-opacity-10 text-hospital-primary" 
-                      : ""
-                    }
+                  <Link 
+                    to={item.path} 
+                    className={cn(
+                      "flex items-center gap-2 p-2 rounded-md hover:bg-hospital-primary/10",
+                      location.pathname === item.path && "bg-hospital-primary bg-opacity-10 text-hospital-primary"
+                    )}
                   >
-                    <Link to={item.path} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.title}</span>
+                  </Link>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

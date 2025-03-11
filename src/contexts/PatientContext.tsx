@@ -40,7 +40,8 @@ interface PatientContextType {
   addPatient: (patient: Omit<Patient, 'id' | 'registrationDate' | 'status'>) => void;
   updatePatientStatus: (id: string, status: Patient['status']) => void;
   addTriageData: (data: Omit<TriageData, 'triageDate'>) => void;
-  addConsultationData: (data: Omit<ConsultationData, 'consultationDate'>) => void;
+  // Update this line to accept Partial<ConsultationData> except for patientId
+  addConsultationData: (data: Partial<Omit<ConsultationData, 'consultationDate'>> & { patientId: string }) => void;
   getPatientById: (id: string) => Patient | undefined;
   getTriageDataByPatientId: (id: string) => TriageData | undefined;
   getConsultationDataByPatientId: (id: string) => ConsultationData | undefined;

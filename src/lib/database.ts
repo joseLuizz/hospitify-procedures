@@ -10,15 +10,24 @@ import {
   setDoc,
   query,
   where,
-  orderBy
+  orderBy,
+  getDoc
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { Patient, TriageData, ConsultationData } from "@/types/patient";
 
+// Collections names
+const COLLECTIONS = {
+  USERS: "users",
+  PATIENTS: "patients",
+  TRIAGE: "triage",
+  CONSULTATIONS: "consultations"
+};
+
 // User management functions
 export async function getAllUsers() {
   try {
-    const usersSnapshot = await getDocs(collection(db, "users"));
+    const usersSnapshot = await getDocs(collection(db, COLLECTIONS.USERS));
     const usersList = usersSnapshot.docs.map(doc => ({
       id: doc.id,
       email: doc.data().email,
@@ -29,6 +38,7 @@ export async function getAllUsers() {
     
     return { users: usersList, error: null };
   } catch (error: any) {
+    console.error("Error getting users:", error);
     return { users: [], error: { message: error.message } };
   }
 }
@@ -39,7 +49,7 @@ export async function signUp(email: string, password: string, role: string, name
     const userId = Math.random().toString(36).substring(2, 15);
     
     // Store user data in Firestore
-    await setDoc(doc(db, "users", userId), {
+    await setDoc(doc(db, COLLECTIONS.USERS, userId), {
       email,
       role,
       name,
@@ -61,6 +71,7 @@ export async function signUp(email: string, password: string, role: string, name
       error: null 
     };
   } catch (error: any) {
+    console.error("Error signing up:", error);
     return { 
       data: null, 
       error: { message: error.message } 
@@ -70,19 +81,21 @@ export async function signUp(email: string, password: string, role: string, name
 
 export async function updateUserRole(userId: string, role: string) {
   try {
-    const userRef = doc(db, "users", userId);
+    const userRef = doc(db, COLLECTIONS.USERS, userId);
     await updateDoc(userRef, { role });
     return { data: { success: true }, error: null };
   } catch (error: any) {
+    console.error("Error updating user role:", error);
     return { data: null, error: { message: error.message } };
   }
 }
 
 export async function deleteUser(userId: string) {
   try {
-    await deleteDoc(doc(db, "users", userId));
+    await deleteDoc(doc(db, COLLECTIONS.USERS, userId));
     return { error: null };
   } catch (error: any) {
+    console.error("Error deleting user:", error);
     return { error: { message: error.message } };
   }
 }
@@ -90,14 +103,19 @@ export async function deleteUser(userId: string) {
 // Patient management functions
 export async function getAllPatients() {
   try {
-    const patientsSnapshot = await getDocs(collection(db, "patients"));
-    const patientsList = patientsSnapshot.docs.map(doc => ({
-      ...doc.data(),
-      id: doc.id,
-    })) as Patient[];
+    const patientsSnapshot = await getDocs(collection(db, COLLECTIONS.PATIENTS));
+    const patientsList = patientsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        registrationDate: data.registrationDate?.toDate().toISOString() || new Date().toISOString()
+      };
+    }) as Patient[];
     
     return { patients: patientsList, error: null };
   } catch (error: any) {
+    console.error("Error getting patients:", error);
     return { patients: [], error: { message: error.message } };
   }
 }
@@ -110,17 +128,19 @@ export async function addPatient(patientData: Omit<Patient, 'id' | 'registration
       status: 'waiting',
     };
     
-    const docRef = await addDoc(collection(db, "patients"), newPatient);
+    const docRef = await addDoc(collection(db, COLLECTIONS.PATIENTS), newPatient);
     
     return { 
       data: { 
         id: docRef.id,
-        ...newPatient,
+        ...patientData,
+        status: 'waiting',
         registrationDate: new Date().toISOString(),
-      }, 
+      } as Patient, 
       error: null 
     };
   } catch (error: any) {
+    console.error("Error adding patient:", error);
     return { 
       data: null, 
       error: { message: error.message } 
@@ -130,10 +150,11 @@ export async function addPatient(patientData: Omit<Patient, 'id' | 'registration
 
 export async function updatePatientStatus(patientId: string, status: Patient['status']) {
   try {
-    const patientRef = doc(db, "patients", patientId);
+    const patientRef = doc(db, COLLECTIONS.PATIENTS, patientId);
     await updateDoc(patientRef, { status });
     return { data: { success: true }, error: null };
   } catch (error: any) {
+    console.error("Error updating patient status:", error);
     return { data: null, error: { message: error.message } };
   }
 }
@@ -141,19 +162,24 @@ export async function updatePatientStatus(patientId: string, status: Patient['st
 export async function getPatientsByStatus(status: Patient['status']) {
   try {
     const q = query(
-      collection(db, "patients"),
+      collection(db, COLLECTIONS.PATIENTS),
       where("status", "==", status),
       orderBy("registrationDate", "desc")
     );
     
     const patientsSnapshot = await getDocs(q);
-    const patientsList = patientsSnapshot.docs.map(doc => ({
-      ...doc.data(),
-      id: doc.id,
-    })) as Patient[];
+    const patientsList = patientsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        registrationDate: data.registrationDate?.toDate().toISOString() || new Date().toISOString()
+      };
+    }) as Patient[];
     
     return { patients: patientsList, error: null };
   } catch (error: any) {
+    console.error("Error getting patients by status:", error);
     return { patients: [], error: { message: error.message } };
   }
 }
@@ -166,7 +192,7 @@ export async function addTriageData(data: Omit<TriageData, 'triageDate'>) {
       triageDate: serverTimestamp(),
     };
     
-    await setDoc(doc(db, "triage", data.patientId), newTriageData);
+    await setDoc(doc(db, COLLECTIONS.TRIAGE, data.patientId), newTriageData);
     
     // Update patient status
     await updatePatientStatus(data.patientId, 'in-consultation');
@@ -175,10 +201,11 @@ export async function addTriageData(data: Omit<TriageData, 'triageDate'>) {
       data: { 
         ...newTriageData,
         triageDate: new Date().toISOString(),
-      }, 
+      } as TriageData, 
       error: null 
     };
   } catch (error: any) {
+    console.error("Error adding triage data:", error);
     return { 
       data: null, 
       error: { message: error.message } 
@@ -188,22 +215,25 @@ export async function addTriageData(data: Omit<TriageData, 'triageDate'>) {
 
 export async function getTriageDataByPatientId(patientId: string) {
   try {
-    const triageDoc = await getDocs(query(
-      collection(db, "triage"),
-      where("patientId", "==", patientId)
-    ));
+    const triageRef = doc(db, COLLECTIONS.TRIAGE, patientId);
+    const triageDoc = await getDoc(triageRef);
     
-    if (triageDoc.empty) {
+    if (!triageDoc.exists()) {
       return { data: null, error: null };
     }
     
-    const triageData = triageDoc.docs[0].data() as TriageData;
+    const data = triageDoc.data();
+    const triageData = {
+      ...data,
+      triageDate: data.triageDate?.toDate().toISOString() || new Date().toISOString()
+    } as TriageData;
     
     return { 
       data: triageData, 
       error: null 
     };
   } catch (error: any) {
+    console.error("Error getting triage data:", error);
     return { 
       data: null, 
       error: { message: error.message } 
@@ -300,7 +330,7 @@ export async function addConsultationData(data: Partial<Omit<ConsultationData, '
       consultationDate: serverTimestamp(),
     };
     
-    await setDoc(doc(db, "consultations", data.patientId), consultationWithTimestamp);
+    await setDoc(doc(db, COLLECTIONS.CONSULTATIONS, data.patientId), consultationWithTimestamp);
     
     // Update patient status
     await updatePatientStatus(data.patientId, 'completed');
@@ -309,10 +339,11 @@ export async function addConsultationData(data: Partial<Omit<ConsultationData, '
       data: { 
         ...newConsultationData,
         consultationDate: new Date().toISOString(),
-      }, 
+      } as ConsultationData, 
       error: null 
     };
   } catch (error: any) {
+    console.error("Error adding consultation data:", error);
     return { 
       data: null, 
       error: { message: error.message } 
@@ -322,22 +353,25 @@ export async function addConsultationData(data: Partial<Omit<ConsultationData, '
 
 export async function getConsultationDataByPatientId(patientId: string) {
   try {
-    const consultationDoc = await getDocs(query(
-      collection(db, "consultations"),
-      where("patientId", "==", patientId)
-    ));
+    const consultationRef = doc(db, COLLECTIONS.CONSULTATIONS, patientId);
+    const consultationDoc = await getDoc(consultationRef);
     
-    if (consultationDoc.empty) {
+    if (!consultationDoc.exists()) {
       return { data: null, error: null };
     }
     
-    const consultationData = consultationDoc.docs[0].data() as ConsultationData;
+    const data = consultationDoc.data();
+    const consultationData = {
+      ...data,
+      consultationDate: data.consultationDate?.toDate().toISOString() || new Date().toISOString()
+    } as ConsultationData;
     
     return { 
       data: consultationData, 
       error: null 
     };
   } catch (error: any) {
+    console.error("Error getting consultation data:", error);
     return { 
       data: null, 
       error: { message: error.message } 

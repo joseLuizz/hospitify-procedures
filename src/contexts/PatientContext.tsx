@@ -46,6 +46,19 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
         const { patients: fetchedPatients, error } = await getAllPatients();
         if (error) throw error;
         setPatients(fetchedPatients);
+
+        // For each patient, fetch their triage and consultation data if available
+        for (const patient of fetchedPatients) {
+          const { data: fetchedTriageData } = await getTriageDataByPatientIdFromDb(patient.id);
+          if (fetchedTriageData) {
+            setTriageData(prev => [...prev, fetchedTriageData]);
+          }
+
+          const { data: fetchedConsultationData } = await getConsultationDataByPatientIdFromDb(patient.id);
+          if (fetchedConsultationData) {
+            setConsultationData(prev => [...prev, fetchedConsultationData]);
+          }
+        }
       } catch (error) {
         console.error("Error fetching patients:", error);
         toast({

@@ -8,7 +8,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyDjj44YzssvnLG171hhFBek9tvDXocWSrY",
   authDomain: "hospitalsaga-73562.firebaseapp.com",
   projectId: "hospitalsaga-73562",
-  storageBucket: "hospitalsaga-73562.firebasestorage.app",
+  storageBucket: "hospitalsaga-73562.appspot.com",
   messagingSenderId: "532797174580",
   appId: "1:532797174580:web:44476b35f409692f422b61",
   measurementId: "G-SL3B7J7C5Z"

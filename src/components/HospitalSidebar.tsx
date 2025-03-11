@@ -22,12 +22,12 @@ import {
   BarChart3,
   Users
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 export function HospitalSidebar() {
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  // Remove isAdmin dependency and set to true for now since we're not using authentication
+  const isAdmin = true;
 
   const menuItems = [
     {

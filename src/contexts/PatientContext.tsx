@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Patient, TriageData, ConsultationData } from '@/types/patient';
 import { useToast } from '@/hooks/use-toast';
@@ -10,21 +9,26 @@ import {
   addConsultationData as addConsultationDataToDb,
   getTriageDataByPatientId as getTriageDataByPatientIdFromDb,
   getConsultationDataByPatientId as getConsultationDataByPatientIdFromDb,
-  getPatientsByStatus as getPatientsByStatusFromDb
+  getPatientsByStatus as getPatientsByStatusFromDb,
+  addMedicationData as addMedicationDataToDb,
+  getMedicationDataByPatientId as getMedicationDataByPatientIdFromDb
 } from '@/lib/database';
+import { MedicationData } from '@/types/medication';
 
 interface PatientContextType {
   patients: Patient[];
   triageData: TriageData[];
   consultationData: ConsultationData[];
+  medicationData: MedicationData[];
   addPatient: (patient: Omit<Patient, 'id' | 'registrationDate' | 'status'>) => void;
   updatePatientStatus: (id: string, status: Patient['status']) => void;
   addTriageData: (data: Omit<TriageData, 'triageDate'>) => void;
-  // Update this line to accept Partial<ConsultationData> except for patientId
   addConsultationData: (data: Partial<Omit<ConsultationData, 'consultationDate'>> & { patientId: string }) => void;
+  addMedicationData: (data: { patientId: string; administeringNurse: string; specialInstructions?: string }) => Promise<void>;
   getPatientById: (id: string) => Patient | undefined;
   getTriageDataByPatientId: (id: string) => TriageData | undefined;
   getConsultationDataByPatientId: (id: string) => ConsultationData | undefined;
+  getMedicationDataByPatientId: (id: string) => MedicationData[];
   getPatientsByStatus: (status: Patient['status']) => Patient[];
   loadingPatients: boolean;
 }
@@ -35,10 +39,10 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [triageData, setTriageData] = useState<TriageData[]>([]);
   const [consultationData, setConsultationData] = useState<ConsultationData[]>([]);
+  const [medicationData, setMedicationData] = useState<MedicationData[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const { toast } = useToast();
 
-  // Load all patients when component mounts
   useEffect(() => {
     const fetchPatients = async () => {
       try {
@@ -47,7 +51,6 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
         if (error) throw error;
         setPatients(fetchedPatients);
 
-        // For each patient, fetch their triage and consultation data if available
         for (const patient of fetchedPatients) {
           const { data: fetchedTriageData } = await getTriageDataByPatientIdFromDb(patient.id);
           if (fetchedTriageData) {
@@ -57,6 +60,11 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
           const { data: fetchedConsultationData } = await getConsultationDataByPatientIdFromDb(patient.id);
           if (fetchedConsultationData) {
             setConsultationData(prev => [...prev, fetchedConsultationData]);
+          }
+          
+          const { data: fetchedMedicationData } = await getMedicationDataByPatientIdFromDb(patient.id);
+          if (fetchedMedicationData && fetchedMedicationData.length > 0) {
+            setMedicationData(prev => [...prev, ...fetchedMedicationData]);
           }
         }
       } catch (error) {
@@ -81,7 +89,6 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       
       if (data) {
-        // Add to local state
         setPatients(prevPatients => [...prevPatients, data as Patient]);
         
         toast({
@@ -105,7 +112,6 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
       
       if (error) throw error;
       
-      // Update local state
       setPatients(prevPatients => 
         prevPatients.map(patient => 
           patient.id === id ? { ...patient, status } : patient
@@ -136,14 +142,10 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       
       if (newTriageData) {
-        // Add to local state
         setTriageData(prevTriageData => [...prevTriageData, newTriageData as TriageData]);
-        
-        // Patient status is updated in the database function
         
         const patient = patients.find(p => p.id === data.patientId);
         if (patient) {
-          // Update local patient status
           setPatients(prevPatients =>
             prevPatients.map(p =>
               p.id === data.patientId ? { ...p, status: 'in-consultation' } : p
@@ -173,16 +175,12 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       
       if (newConsultationData) {
-        // Add to local state
         setConsultationData(prevConsultationData => 
           [...prevConsultationData, newConsultationData as ConsultationData]
         );
         
-        // Patient status is updated in the database function
-        
         const patient = patients.find(p => p.id === data.patientId);
         if (patient) {
-          // Update local patient status
           setPatients(prevPatients =>
             prevPatients.map(p =>
               p.id === data.patientId ? { ...p, status: 'completed' } : p
@@ -205,6 +203,36 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const addMedicationData = async (data: { patientId: string; administeringNurse: string; specialInstructions?: string }) => {
+    try {
+      const { data: newMedicationData, error } = await addMedicationDataToDb(data);
+      
+      if (error) throw error;
+      
+      if (newMedicationData) {
+        setMedicationData(prevMedicationData => 
+          [...prevMedicationData, newMedicationData as MedicationData]
+        );
+        
+        const patient = patients.find(p => p.id === data.patientId);
+        if (patient) {
+          toast({
+            title: "Medicação registrada",
+            description: `Medicação de ${patient.name} registrada com sucesso.`,
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error("Error adding medication data:", error);
+      toast({
+        title: "Erro ao registrar medicação",
+        description: error.message || "Não foi possível registrar a medicação",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   const getPatientById = (id: string) => {
     return patients.find((patient) => patient.id === id);
   };
@@ -217,6 +245,10 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
     return consultationData.find((data) => data.patientId === id);
   };
 
+  const getMedicationDataByPatientId = (id: string) => {
+    return medicationData.filter((data) => data.patientId === id);
+  };
+
   const getPatientsByStatus = (status: Patient['status']) => {
     return patients.filter((patient) => patient.status === status);
   };
@@ -227,13 +259,16 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
         patients,
         triageData,
         consultationData,
+        medicationData,
         addPatient,
         updatePatientStatus,
         addTriageData,
         addConsultationData,
+        addMedicationData,
         getPatientById,
         getTriageDataByPatientId,
         getConsultationDataByPatientId,
+        getMedicationDataByPatientId,
         getPatientsByStatus,
         loadingPatients
       }}

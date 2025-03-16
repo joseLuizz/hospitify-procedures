@@ -25,7 +25,8 @@ import {
   BarChart3,
   Users,
   LogOut,
-  Menu
+  Menu,
+  Pill
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,11 @@ export function HospitalSidebar() {
       title: "Consulta Médica",
       path: "/consulta",
       icon: FileText,
+    },
+    {
+      title: "Medicação",
+      path: "/medicacao",
+      icon: Pill,
     },
     {
       title: "Relatórios",

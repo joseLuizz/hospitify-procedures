@@ -1,4 +1,3 @@
-
 import { 
   collection, 
   doc, 
@@ -22,7 +21,8 @@ const COLLECTIONS = {
   USERS: "users",
   PATIENTS: "patients",
   TRIAGE: "triage",
-  CONSULTATIONS: "consultations"
+  CONSULTATIONS: "consultations",
+  MEDICATIONS: "medications"
 };
 
 // User management functions
@@ -388,6 +388,64 @@ export async function getConsultationDataByPatientId(patientId: string) {
     console.error("Error getting consultation data:", error);
     return { 
       data: null, 
+      error: { message: error.message } 
+    };
+  }
+}
+
+// Medication functions
+export async function addMedicationData(data: { patientId: string; administeringNurse: string; specialInstructions?: string }) {
+  try {
+    const newMedicationData = {
+      ...data,
+      administeredAt: serverTimestamp(),
+    };
+    
+    const docRef = await addDoc(collection(db, COLLECTIONS.MEDICATIONS), newMedicationData);
+    
+    return { 
+      data: { 
+        id: docRef.id,
+        ...newMedicationData,
+        administeredAt: new Date().toISOString(),
+      }, 
+      error: null 
+    };
+  } catch (error: any) {
+    console.error("Error adding medication data:", error);
+    return { 
+      data: null, 
+      error: { message: error.message } 
+    };
+  }
+}
+
+export async function getMedicationDataByPatientId(patientId: string) {
+  try {
+    const q = query(
+      collection(db, COLLECTIONS.MEDICATIONS),
+      where("patientId", "==", patientId),
+      orderBy("administeredAt", "desc")
+    );
+    
+    const medicationsSnapshot = await getDocs(q);
+    const medicationsList = medicationsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        administeredAt: data.administeredAt?.toDate().toISOString() || new Date().toISOString()
+      };
+    });
+    
+    return { 
+      data: medicationsList, 
+      error: null 
+    };
+  } catch (error: any) {
+    console.error("Error getting medication data:", error);
+    return { 
+      data: [], 
       error: { message: error.message } 
     };
   }

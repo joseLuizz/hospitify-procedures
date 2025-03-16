@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import PatientRegistration from "./pages/PatientRegistration";
 import Triage from "./pages/Triage";
 import Consultation from "./pages/Consultation";
+import Medication from "./pages/Medication";
 import Reports from "./pages/Reports";
 import UserManagement from "./pages/UserManagement";
 import Login from "./pages/Login";
@@ -50,6 +51,12 @@ const App = () => (
               <Route path="/consulta" element={
                 <Layout>
                   <Consultation />
+                </Layout>
+              } />
+              
+              <Route path="/medicacao" element={
+                <Layout>
+                  <Medication />
                 </Layout>
               } />
               

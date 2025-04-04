@@ -118,7 +118,7 @@ export function HospitalSidebar() {
                 {menuItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <Link 
-                      to={item.path} 
+                      to={item.path}
                       className={cn(
                         "flex items-center gap-2 p-2 rounded-md hover:bg-hospital-primary/10",
                         location.pathname === item.path && "bg-hospital-primary bg-opacity-10 text-hospital-primary"

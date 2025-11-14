@@ -4,14 +4,15 @@ import { getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
 // Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyDjj44YzssvnLG171hhFBek9tvDXocWSrY",
-  authDomain: "hospitalsaga-73562.firebaseapp.com",
-  projectId: "hospitalsaga-73562",
-  storageBucket: "hospitalsaga-73562.appspot.com",
-  messagingSenderId: "532797174580",
-  appId: "1:532797174580:web:44476b35f409692f422b61",
-  measurementId: "G-SL3B7J7C5Z"
+  apiKey: "AIzaSyCJ4fW8UhhJqfcI67Nej9QZnLo8lauTGqI",
+  authDomain: "hospitalteste-85db9.firebaseapp.com",
+  projectId: "hospitalteste-85db9",
+  storageBucket: "hospitalteste-85db9.firebasestorage.app",
+  messagingSenderId: "861557202219",
+  appId: "1:861557202219:web:b52f743326ddff0d03f96e",
+  measurementId: "G-SH1ESGXC5L"
 };
 
 // Initialize Firebase

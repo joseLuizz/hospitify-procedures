@@ -108,13 +108,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     setError(null);
     try {
+      console.log("Tentando fazer login com:", email);
       const auth = getAuth();
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log("Login bem-sucedido:", userCredential.user.uid);
       // User will be set by the onAuthStateChanged listener
     } catch (err: any) {
-      console.error("Login error:", err);
-      setError(err.message || "Failed to login");
+      console.error("Erro no login - Código:", err.code);
+      console.error("Erro no login - Mensagem:", err.message);
+      
+      let errorMessage = "Falha ao fazer login";
+      
+      if (err.code === 'auth/invalid-credential') {
+        errorMessage = "Email ou senha incorretos. Verifique suas credenciais.";
+      } else if (err.code === 'auth/user-not-found') {
+        errorMessage = "Usuário não encontrado. Verifique o email.";
+      } else if (err.code === 'auth/wrong-password') {
+        errorMessage = "Senha incorreta.";
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = "Email inválido.";
+      } else if (err.code === 'auth/user-disabled') {
+        errorMessage = "Esta conta foi desabilitada.";
+      }
+      
+      setError(errorMessage);
       setLoading(false);
+      throw err;
     }
   };
   
